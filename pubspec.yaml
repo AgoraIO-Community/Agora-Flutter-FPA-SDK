@@ -1,6 +1,6 @@
 name: agora_fpa_service
 description: Flutter plugin to integrate Agora FPA service into your app with just a few lines of code.
-version: 0.1.14
+version: 1.0.0
 homepage: 'https://www.agora.io'
 repository: 'https://github.com/AgoraIO-Community/Agora-Flutter-FPA-SDK'
 

@@ -63,8 +63,8 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
         path.join(externalStorage.absolute.path, 'agora', 'fp_log_sdk.log');
 
     FpaProxyServiceConfig fpaConfig = FpaProxyServiceConfig(
-      appId: 'aab8b8f5a8cd4469a63042fcfafe7063',
-      token: 'aab8b8f5a8cd4469a63042fcfafe7063',
+      appId: '<Your App ID>',
+      token: '<Your Token>',
       logFileSizeKb: 1024,
       logLevel: FpaProxyServiceLogLevel.error,
       logFilePath: _logFilePath,
@@ -111,15 +111,6 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
     setState(() {
       _isInit = true;
     });
-  }
-
-  @override
-  void onProxyEvent(FpaProxyEvent event, FpaProxyConnectionInfo connectionInfo,
-      int errorCode) {
-    _logSink.sink(
-      'onProxyEvent',
-      'event: $event, connectionInfo: ${connectionInfo.toString()}, errorCode: $errorCode',
-    );
   }
 
   @override
@@ -366,6 +357,30 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
               ),
       ),
     );
+  }
+
+  @override
+  void onAccelerationSuccess(FpaProxyConnectionInfo info) {
+    _logSink.sink('onAccelerationSuccess', 'info: ${info.toJson()}');
+  }
+
+  @override
+  void onConnected(FpaProxyConnectionInfo info) {
+    _logSink.sink('onConnected', 'info: ${info.toJson()}');
+  }
+
+  @override
+  void onConnectionFailed(
+      FpaProxyConnectionInfo info, FpaProxyServiceReasonCode reason) {
+    _logSink.sink(
+        'onConnectionFailed', 'info: ${info.toJson()}, reason: $reason');
+  }
+
+  @override
+  void onDisconnectedAndFallback(
+      FpaProxyConnectionInfo info, FpaProxyServiceReasonCode reason) {
+    _logSink.sink('onDisconnectedAndFallback',
+        'info: ${info.toJson()}, reason: $reason');
   }
 }
 

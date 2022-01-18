@@ -5,15 +5,9 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:agora_fpa_service/agora_fpa_service.dart';
-import 'package:agora_fpa_service/src/fpa_chain_info.dart';
-import 'package:agora_fpa_service/src/fpa_proxy_service_error_code.dart';
+import 'package:agora_fpa_service/src/fpa_proxy_service_observer_json.dart';
 import 'package:ffi/ffi.dart';
-import 'package:flutter/material.dart';
-
-import 'fpa_http_proxy_chain_config.dart';
-import 'fpa_proxy_service_config.dart';
-import 'fpa_proxy_service_diagnosis_info.dart';
-import 'fpa_proxy_service_observer.dart';
+import 'package:flutter/foundation.dart';
 import 'native_iris_fpa_bindings.dart';
 
 const int kBasicResultLength = 512;
@@ -25,14 +19,20 @@ class FpaProxyServiceImpl implements FpaProxyService {
         : DynamicLibrary.process();
   }
 
-  FpaProxyServiceImpl._() {
-    _binding = NativeIrisFpaBinding(_loadAgoraFpaServiceLib());
+  @visibleForTesting
+  FpaProxyServiceImpl(NativeIrisFpaBinding binding) {
+    _binding = binding;
   }
 
   static const String kLocalHost = '127.0.0.1';
 
   static FpaProxyServiceImpl get instance => _instance;
-  static final FpaProxyServiceImpl _instance = FpaProxyServiceImpl._();
+  static FpaProxyServiceImpl _instance =
+      FpaProxyServiceImpl(NativeIrisFpaBinding(_loadAgoraFpaServiceLib()));
+  @visibleForTesting
+  static set instance(FpaProxyServiceImpl instance) {
+    _instance = instance;
+  }
 
   late final NativeIrisFpaBinding _binding;
   ffi.Pointer<ffi.Void>? _irisFpaPtr;
@@ -65,11 +65,13 @@ class FpaProxyServiceImpl implements FpaProxyService {
         ffi.nullptr,
       );
 
-      _dartNativeReceivePort = ReceivePort()..listen(_onProxyEventHandle);
+      _dartNativeReceivePort = ReceivePort()..listen(onEventHandlerHandle);
       _dartNativePort = _dartNativeReceivePort!.sendPort.nativePort;
 
       _irisEventHandlerPtr = _binding.SetIrisFpaProxyServiceEventHandlerFlutter(
           _irisFpaPtr!, ffi.NativeApi.initializeApiDLData, _dartNativePort);
+
+      setParameters('{"fpa.app_type":4}');
 
       _checkReturnCode(ret);
     } catch (e) {
@@ -100,30 +102,47 @@ class FpaProxyServiceImpl implements FpaProxyService {
     } finally {
       _irisFpaPtr = null;
       _irisEventHandlerPtr = null;
-      _instance._fpaObserver = null;
+      _fpaObserver = null;
       _dartNativeReceivePort?.close();
       _dartNativeReceivePort = null;
     }
   }
 
-  static void _onProxyEventHandle(dynamic data) {
+  @visibleForTesting
+  static void onEventHandlerHandle(dynamic data) {
     final dataList = List.from(data);
     final event = dataList[0];
-    if (event == 'onProxyEvent') {
-      final res = dataList[1] as String;
+    final res = dataList[1] as String;
 
-      final proxyEvent = ProxyEvent.fromJson(jsonDecode(res));
-      _instance._fpaObserver?.onProxyEvent(
-        proxyEvent.event,
-        proxyEvent.connectionInfo,
-        proxyEvent.errorCode,
-      );
+    switch (event) {
+      case 'onAccelerationSuccess':
+        final infoJson = FpaProxyConnectionInfoJson.fromJson(jsonDecode(res));
+        _instance._fpaObserver?.onAccelerationSuccess(infoJson.info);
+        break;
+      case 'onConnected':
+        final infoJson = FpaProxyConnectionInfoJson.fromJson(jsonDecode(res));
+        _instance._fpaObserver?.onConnected(infoJson.info);
+        break;
+      case 'onDisconnectedAndFallback':
+        final fallback = DisconnectedAndFallbackJson.fromJson(jsonDecode(res));
+        _instance._fpaObserver?.onDisconnectedAndFallback(
+          fallback.info,
+          fallback.reason,
+        );
+        break;
+      case 'onConnectionFailed':
+        final connectionFailed = ConnectionFailedJson.fromJson(jsonDecode(res));
+        _instance._fpaObserver?.onConnectionFailed(
+          connectionFailed.info,
+          connectionFailed.reason,
+        );
+        break;
     }
   }
 
   @override
   void setObserver(FpaProxyServiceObserver observer) {
-    _instance._fpaObserver = observer;
+    _fpaObserver = observer;
   }
 
   @override
@@ -144,7 +163,7 @@ class FpaProxyServiceImpl implements FpaProxyService {
     } catch (e) {
       debugPrint(
           '[FpaProxyService] getHttpProxyPort() with error ${e.toString()}');
-      return FpaProxyServiceErrorCode.badPort;
+      return FpaProxyServiceErrorCode.unableBindSocketPort;
     } finally {
       calloc.free(result);
     }
@@ -171,7 +190,7 @@ class FpaProxyServiceImpl implements FpaProxyService {
     } catch (e) {
       debugPrint(
           '[FpaProxyService] getTransparentProxyPort() with error ${e.toString()}');
-      return FpaProxyServiceErrorCode.badPort;
+      return FpaProxyServiceErrorCode.unableBindSocketPort;
     } finally {
       calloc.free(param);
       calloc.free(result);

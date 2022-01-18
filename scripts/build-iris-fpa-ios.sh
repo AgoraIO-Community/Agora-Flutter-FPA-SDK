@@ -3,7 +3,7 @@
 set -e
 
 ROOT_PATH=$(pwd)
-IRIS_PROJECT_PATH=../../../iris
+IRIS_PROJECT_PATH=$1
 
 BUILD_TYPE="Release"
 ARCHI_TYPE="OS64COMBINED"
