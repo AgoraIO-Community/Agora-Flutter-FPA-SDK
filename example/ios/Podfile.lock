@@ -1,0 +1,41 @@
+PODS:
+  - agora_fpa_service (1.0.0):
+    - AgoraIrisFPA_iOS (= 1.0.0)
+    - Flutter
+  - AgoraIrisFPA_iOS (1.0.0)
+  - Flutter (1.0.0)
+  - path_provider_ios (0.0.1):
+    - Flutter
+  - "permission_handler (5.1.0+2)":
+    - Flutter
+
+DEPENDENCIES:
+  - agora_fpa_service (from `.symlinks/plugins/agora_fpa_service/ios`)
+  - Flutter (from `Flutter`)
+  - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
+  - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
+
+SPEC REPOS:
+  trunk:
+    - AgoraIrisFPA_iOS
+
+EXTERNAL SOURCES:
+  agora_fpa_service:
+    :path: ".symlinks/plugins/agora_fpa_service/ios"
+  Flutter:
+    :path: Flutter
+  path_provider_ios:
+    :path: ".symlinks/plugins/path_provider_ios/ios"
+  permission_handler:
+    :path: ".symlinks/plugins/permission_handler/ios"
+
+SPEC CHECKSUMS:
+  agora_fpa_service: 4d27cb3ed112ec2d3bea5b41be8f24df7a2f305a
+  AgoraIrisFPA_iOS: ec837bbc54d6f41740696d78bedb748002223f7b
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
+  permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
+
+PODFILE CHECKSUM: a5469c4b49dd3bf172e5de6efb2ddf327bd5f333
+
+COCOAPODS: 1.11.2

@@ -1,0 +1,22 @@
+name: 'NativeIrisFpaBinding'
+description: 'Bindings to IrisFpaProxyService'
+
+output: 'lib/src/native_iris_fpa_bindings.dart'
+
+headers:
+  entry-points:
+    - 'third_party/include/iris_fpa_c_api.h'
+    - 'third_party/include/iris_fpa_flutter_c_api.h'
+  include-directives:
+    - 'third_party/include/iris_fpa_c_api.h'
+    - 'third_party/include/iris_fpa_flutter_c_api.h'
+
+# Generating typedefs need set the sdk constraints to >=2.14, remove it 
+# if we can set our sdk constraints to >=2.14
+typedefs:
+  exclude:
+    - 'IrisFpaProxyServicePtr'
+    - 'IrisCEventHandler'
+    - 'Func_Event'
+    - 'Func_EventWithBuffer'
+    - 'IrisEventHandlerHandle'
