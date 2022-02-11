@@ -9,6 +9,18 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// Get your own App ID at https://dashboard.agora.io/
+String appId = const String.fromEnvironment(
+  'TEST_APP_ID',
+  defaultValue: '<YOUR_APP_ID>',
+);
+
+/// Please refer to https://docs.agora.io/en/Agora%20Platform/token
+String token = const String.fromEnvironment(
+  'TEST_TOEKN',
+  defaultValue: '<YOUR_TOEKN>',
+);
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -63,8 +75,8 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
         path.join(externalStorage.absolute.path, 'agora', 'fp_log_sdk.log');
 
     FpaProxyServiceConfig fpaConfig = FpaProxyServiceConfig(
-      appId: '<Your App ID>',
-      token: '<Your Token>',
+      appId: appId,
+      token: token,
       logFileSizeKb: 1024,
       logLevel: FpaProxyServiceLogLevel.error,
       logFilePath: _logFilePath,
@@ -128,11 +140,15 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
         client.findProxy = (uri) {
           return 'PROXY ${FpaProxyService.kLocalHost}:${FpaProxyService.instance.getHttpProxyPort()}';
         };
+
+        return client;
       };
     } else {
       (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
           (client) {
         client.findProxy = null;
+
+        return client;
       };
     }
   }
@@ -153,6 +169,8 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
 
   Future<void> _downloadInner(
       String url, String fileName, int currentTime) async {
+    await Future.delayed(const Duration(seconds: 1));
+
     final externalStorage = await getApplicationDocumentsDirectory();
 
     Stopwatch stopwatch = Stopwatch();
@@ -206,6 +224,8 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
 
   Future<void> _uploadInner(
       String url, String fileName, int currentTime) async {
+    await Future.delayed(const Duration(seconds: 1));
+
     final externalStorage = await getApplicationDocumentsDirectory();
 
     FormData formData = FormData.fromMap({
@@ -379,8 +399,8 @@ class _MyAppState extends State<MyApp> implements FpaProxyServiceObserver {
   @override
   void onDisconnectedAndFallback(
       FpaProxyConnectionInfo info, FpaProxyServiceReasonCode reason) {
-    _logSink.sink('onDisconnectedAndFallback',
-        'info: ${info.toJson()}, reason: $reason');
+    _logSink.sink(
+        'onDisconnectedAndFallback', 'info: ${info.toJson()}, reason: $reason');
   }
 }
 
@@ -388,9 +408,7 @@ class LogSink extends ChangeNotifier {
   final StringBuffer stringBuffer = StringBuffer();
 
   void sink(String tag, String log, {bool appendTimestampToTag = true}) {
-    String logNew = log;
     final now = DateTime.now();
-    logNew = '${now.hour}:${now.minute}:${now.second} $logNew';
 
     stringBuffer.writeln('${now.hour}:${now.minute}:${now.second} [$tag] $log');
     stringBuffer.writeln();
